@@ -1,14 +1,14 @@
 import { css, cx } from '@emotion/css';
 import React, { FormEvent, useCallback, useEffect, useState, useRef } from 'react';
-import { ClickOutsideWrapper, Icon, Input, Spinner, useStyles2 } from '@grafana/ui';
+import { ClickOutsideWrapper, Input, Spinner, useStyles2 } from '@grafana/ui';
 import { MetricPickerMenu } from './MetricPickerMenu';
 import { GrafanaTheme2, SelectableValue } from '@grafana/data';
-import { isRegex } from '../../datasource-zabbix/utils';
+import { isRegex } from '../../datasource/utils';
 
 export interface Props {
   value: string;
   isLoading?: boolean;
-  options: SelectableValue<string>[];
+  options: Array<SelectableValue<string>>;
   width?: number;
   onChange: (value: string) => void;
 }
@@ -18,7 +18,7 @@ export const MetricPicker = ({ value, options, isLoading, width, onChange }: Pro
   const [query, setQuery] = useState(value);
   const [filteredOptions, setFilteredOptions] = useState(options);
   const [selectedOptionIdx, setSelectedOptionIdx] = useState(-1);
-  const [offset, setOffset] = useState({ vertical: 0, horizontal: 0 });
+  const [offset] = useState({ vertical: 0, horizontal: 0 });
   const ref = useRef<HTMLDivElement>(null);
   const customStyles = useStyles2(getStyles);
 
@@ -50,7 +50,7 @@ export const MetricPicker = ({ value, options, isLoading, width, onChange }: Pro
     const newQuery = v?.currentTarget?.value;
     if (newQuery) {
       setQuery(newQuery);
-      if (value != newQuery) {
+      if (value !== newQuery) {
         const filtered = options.filter(
           (option) =>
             option.value?.toLowerCase().includes(newQuery.toLowerCase()) ||
@@ -71,6 +71,10 @@ export const MetricPicker = ({ value, options, isLoading, width, onChange }: Pro
     setQuery(newValue);
     onChange(newValue);
     onClose();
+  };
+
+  const onBlurInternal = () => {
+    onChange(query);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -105,7 +109,7 @@ export const MetricPicker = ({ value, options, isLoading, width, onChange }: Pro
           value={query}
           type="text"
           onChange={onInputChange}
-          onBlur={() => onChange(query)}
+          onBlur={onBlurInternal}
           onMouseDown={onOpen}
           suffix={isLoading && <Spinner />}
           width={width}
